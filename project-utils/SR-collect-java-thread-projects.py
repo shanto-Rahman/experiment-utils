@@ -6,12 +6,10 @@ import subprocess
 import sys
 import os
 
-#from find import find_file
-
 def check_for_thread_instance(project_url):
     thread_instance = True
     project=project_url.split('/')[-1]
-    if os.path.isdir('thread_projects/'+ project) == False :
+    if not os.path.isdir('thread_projects/'+ project) :
         command = 'git clone ' + project_url + ' thread_projects/'+ project + ' --depth=1'
         subprocess.call(command.split())
     grep_command = ['grep',  '-r' 'new Thread(', 'thread_projects/'+ project]
@@ -42,17 +40,9 @@ def main(args):
                 thread_project_list.append(url)
             else:
                 print("No Thread Instance Found")
-        if os.path.exists('output.txt'):
-            appendEOL = True 
-        else:
-            appendEOL = False
         with open('output.txt', 'a+') as f2:
             for line in thread_project_list:
-                if appendEOL == False:
-                    appendEOL = True
-                else:
-                    f2.write("\n") 
-                f2.write(line)
+                f2.write(line+'\n' )
         print("Newly Added Total Number of Thread Projects = ", count) 
 
 
