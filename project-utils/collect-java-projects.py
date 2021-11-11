@@ -89,7 +89,7 @@ def search_for_concurrency_projects(maven_projects) :
         project = project.rstrip()
         project_dir_name = project_dir_name.rstrip()
         print(project_dir_name)
-        grep_command = ['grep',  '-r'  'Thread\|concurrency\|race', project_dir_name]
+        grep_command = ['grep', '-E', '-r', '-i',  'Thread|concurrency|race', project_dir_name]
         try:
             output = subprocess.check_output(grep_command)
             print("GOT MATCH")
@@ -98,7 +98,7 @@ def search_for_concurrency_projects(maven_projects) :
             concurrency_projects.append(project)
         except subprocess.CalledProcessError as grepexc:
             print( "NO MATCH error code", grepexc.returncode, grepexc.output)
-            shutil.rmtree(project)
+            shutil.rmtree(project_dir_name)
     return concurrency_projects
 
 
