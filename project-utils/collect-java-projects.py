@@ -16,7 +16,11 @@ def filter_for_maven_projects(slugs):
         # If can get a response, then project is (probably) Maven
         if response.ok:
             # Some tweaking to get the actual project slug, in case of redirects
-            actual_project_slug = response.url.replace('https://github.com/', '').replace('/blob/master/pom.xml', '')
+            #actual_project_slug = response.url.replace('https://github.com/', '').replace('/blob/master/pom.xml', '')
+            branch_name=response.url.split('/')[-2]
+            #print(branch_name)
+            actual_project_slug = response.url.replace('https://github.com/', '').replace('/blob/'+branch_name +'/pom.xml', '')
+
             maven_projects.append(actual_project_slug)
     return maven_projects
 
@@ -70,6 +74,34 @@ def filter_for_multimodule_projects(travis_projects):
         shutil.rmtree('tmp')
     return multimodule_projects
 
+def search_for_concurrency_projects(maven_projects) :
+    concurrency_projects = []
+    count = 0
+    for project in maven_projects:
+       # if not file_exists :
+        #print("Hi")
+
+        command = 'git clone '+ 'https://github.com/' + project
+        print(project)
+        project_dir_name=command.split('/')[-1]
+        print(command)
+        subprocess.call(command.split())
+        project = project.rstrip()
+        project_dir_name = project_dir_name.rstrip()
+        print(project_dir_name)
+        grep_command = ['grep',  '-r'  'Thread\|concurrency\|race', project_dir_name]
+        try:
+            output = subprocess.check_output(grep_command)
+            print("GOT MATCH")
+            count += 1
+            print(count)
+            concurrency_projects.append(project)
+        except subprocess.CalledProcessError as grepexc:
+            print( "NO MATCH error code", grepexc.returncode, grepexc.output)
+            shutil.rmtree(project)
+    return concurrency_projects
+
+
 def main(args):
     uname = args[1] # Username
     out_file = args[2]
@@ -94,6 +126,10 @@ def main(args):
     # Check if the project is a Maven project by merely checking if a link to the pom.xml can be accessed
     maven_projects = filter_for_maven_projects(slugs)
     print('MAVEN PROJECTS:', len(maven_projects))
+    
+    #To check if maven projects are concurrency projects 
+    concurrency_projects = search_for_concurrency_projects(maven_projects)
+    print('MAVEN PROJECTS:', len(concurrency_projects))
 
     # Check if the Maven projects are on Travis, by hitting the Travis API and checking that it's active
     travis_projects = filter_for_travis_projects(maven_projects)
@@ -102,10 +138,11 @@ def main(args):
     # For each such project, check if it's multi-module by checking it out and counting that it has more than one pom.xml
     multimodule_projects = filter_for_multimodule_projects(travis_projects)
     print('MULTIMODULE PROJECTS', len(multimodule_projects))
+    
 
     # Print out final filtered list of projects (the slugs)
     with open(out_file, 'w') as out:
-        for project in multimodule_projects:
+        for project in concurrency_projects:
             out.write(project + '\n')
 
 if __name__ == '__main__':
