@@ -4,6 +4,7 @@ import requests
 import shutil
 import subprocess
 import sys
+import os
 
 from find import find_file
 
@@ -96,15 +97,18 @@ def search_for_concurrency_projects(maven_projects) :
             count += 1
             print(count)
             concurrency_projects.append(project)
+            shutil.rmtree(project_dir_name)
         except subprocess.CalledProcessError as grepexc:
             print( "NO MATCH error code", grepexc.returncode, grepexc.output)
             shutil.rmtree(project_dir_name)
+
+
     return concurrency_projects
 
 
 def main(args):
     uname = args[1] # Username
-    out_file = args[2]
+    out_file = os.environ["priyaGitPass"] #args[2]
     passwd = getpass.getpass()
 
     # Get all the Java projects on GitHub
